@@ -1,0 +1,440 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>mysqlblasy - MySQL backup for lazy sysadmins</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:nobody@b26.apple.com" />
+</head>
+
+<body style="background-color: white">
+
+<p><a name="__index__"></a></p>
+<!-- INDEX BEGIN -->
+<!--
+
+<ul>
+
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#configuration_file_s_">CONFIGURATION <code>FILE(S)</code></a></li>
+	<li><a href="#options">OPTIONS</a></li>
+	<li><a href="#notes">NOTES</a></li>
+	<li><a href="#license">LICENSE</a></li>
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#bugs">BUGS</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+	<li><a href="#function_documentation">Function documentation</a></li>
+</ul>
+-->
+<!-- INDEX END -->
+
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>mysqlblasy - MySQL backup for lazy sysadmins</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<p><strong>mysqlblasy</strong> [OPTIONS]</p>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p><strong>mysqlblasy</strong> is a Perl script for automating MySQL database backups. It uses
+`mysqldump` for dumping mysql databases to the filessytem. It was written with
+automated usage in mind, e.g. it is very silent during operation and only
+produces noise on errors/problems. It rotates backups automatically to avoid
+that the backup disk gets full when the administrator is on vacation (or is
+lazy). All necessary information for producing backups can be specified in a
+configuration file, which eliminates the need to hide command line options from
+the process table (like passwords).</p>
+<p>Each database gets dumped into a separate file, after which all the dumps get
+tarred/compressed and placed into the specified backup
+directory. Old files in the backup directory get deleted, and the number
+you specify newest files are kept (default 7).</p>
+<p>Backups get filenames containing the hostname, the date and the time (accuracy:
+seconds).</p>
+<p>Optionally, after the dumping has completed, mysqlblasy can run 'OPTIMIZE TABLE'
+on each table in the backup set.</p>
+<p>The verbosity of the output can be specified using the <strong>loglevel</strong> configuration
+key. The recommended value for the loglevel is 2 (WARN).</p>
+<p>
+</p>
+<hr />
+<h1><a name="configuration_file_s_">CONFIGURATION <code>FILE(S)</code></a></h1>
+<p>Configuration files: /etc/mysqlblasy.conf, $HOME/.mysqlblasyrc</p>
+<p>Allowed config keys and values:</p>
+<pre>
+   backupdir           = directory for placing the backup
+   databases           = comma separated list of db's to backup (default all)
+   exclude databases   = comma separated list of db's to NOT backup
+   defaults-extra-file = path to an alternative my.cnf config file
+   dbusername          = mysql username (it is recommended  to use defaults-extra-file)
+   dbpassword          = password for user (it is recommended  to use defaults-extra-file)
+   dbhost              = hostname of database server, this is used for the backup filename too.
+                         If you use a defaults-extra-file, this can be used to set the filename
+                         of the backup-file!
+   optimize_tables     = yes or no or 1 or 0 (default no)
+   loglevel            = NOP(0) ERR(1) WARNING(2) NOTICE(3) INFO(4) DEBUG(5), default 2
+   mysql               = absolute path to the mysql binary (default from $PATH)
+   mysqldump           = absolute path to the mysqldump binary (default from $PATH)
+   use compression     = yes or no or 1 or 0 (default no)
+   compression tool    = see below
+   keep                = number of backup files to keep in backupdir
+   use syslog          = yes or no or 1 or 0 (default yes)
+   tar                 = see below</pre>
+<p>Some of these configuration values may require special attention:
+'compression tool' and 'tar' can be specified with their absolute filenames or
+with only the basename of the executable. If the the specified value cannot be
+resolved, mysqlblasy does NOT fall back to a default tool!</p>
+<p>All configuration keys consisting of a filename/path can have a tilde '~'
+for specifying these HOME directory of the user running mysqlblasy.</p>
+<p>Concerning security and mysql password disclosure in the process
+table, the recommended way to either use the mysql built-in config file 
+called ~/.my.cnf and leave out the username and password or to specify
+an alternative config file with the defaults-extra-file option.</p>
+<p>Example:</p>
+<pre>
+   [client]
+   host     = localhost
+   user     = bob
+   password = y0uRp4s5w0r6
+   socket   = /var/run/mysqld/mysqld.sock</pre>
+<p>
+</p>
+<hr />
+<h1><a name="options">OPTIONS</a></h1>
+<dl>
+<dt><strong><a name="item__2dc_2c__2d_2dconfig_2dfile_file"><strong>-c, --config-file</strong> file</a></strong>
+
+<dd>
+<p>Specify an alternative config file. The system-wide configuration is still read,
+but settings in the specified config file will override the system-wide ones.</p>
+</dd>
+</li>
+<dt><strong><a name="item__2dh_2c__2d_2dhelp"><strong>-h, --help</strong></a></strong>
+
+<dd>
+<p>Displays this help</p>
+</dd>
+</li>
+<dt><strong><a name="item__2dv_2c__2d_2dversion"><strong>-V, --version</strong></a></strong>
+
+<dd>
+<p>Display version and exit</p>
+</dd>
+</li>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="notes">NOTES</a></h1>
+<p><strong>mysqlblasy</strong> will try to use native command line utilities for tarring and
+compressing. If no adequate tools are found, it will try to use Perl native
+routines for tarring and compressing (requires some modules to be installed).
+The command lines tools are preferred for perfomance reasons (especially
+memory usage).</p>
+<p>
+</p>
+<hr />
+<h1><a name="license">LICENSE</a></h1>
+<p>This program is distributed under the terms of the BSD Artistic License.</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Copyright (c) 2003-2008 Paul Kremer.</p>
+<p>
+</p>
+<hr />
+<h1><a name="bugs">BUGS</a></h1>
+<p>Please send patches in unified GNU diff format to &lt;pkremer[at]spurious[dot]biz&gt;</p>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p>mysql, mysqldump, Sys::Syslog, tar, gzip, bzip2, Archive::Tar, Achive::Zip</p>
+<p>
+</p>
+<hr />
+<h1><a name="function_documentation">Function documentation</a></h1>
+<dl>
+<dt><strong><a name="item_bootinit"><code>bootinit()</code></a></strong>
+
+<dd>
+<p><a href="#item_bootinit"><code>bootinit()</code></a> will initialize some variables as well as environmental variables and load the required perl modules.</p>
+</dd>
+</li>
+<dt><strong><a name="item_cfginit"><code>cfginit()</code></a></strong>
+
+<dd>
+<p><a href="#item_cfginit"><code>cfginit()</code></a> will initialize the configuration, depending on command line parameters.</p>
+</dd>
+</li>
+<dt><strong><a name="item_try_to_use"><code>try_to_use(use_string)</code></a></strong>
+
+<dd>
+<p>will eval ``use use_string'' and return undef if it worked. Otherwise returns the exception text.</p>
+</dd>
+</li>
+<dt><strong><a name="item_graceful_die">graceful_die(string message)</a></strong>
+
+<dd>
+<p><a href="#item_graceful_die"><code>graceful_die()</code></a> will log the given message as error and die.</p>
+</dd>
+</li>
+<dt><strong><a name="item__logstring">_logString(mixed message)</a></strong>
+
+<dd>
+<p><a href="#item__logstring"><code>_logString()</code></a> will add debugging information to message and return it. If message
+is not a string, the variable will be preprocessed by Data::Dumper::Dumper().</p>
+</dd>
+</li>
+<dt><strong><a name="item__logit">_logIt(mixed message, int atlevel)</a></strong>
+
+<dd>
+<p>will format and log the message if atlevel is smaller or equal than the
+configured loglevel. Returns the logged message if it got logged to the
+logging backend.</p>
+</dd>
+</li>
+<dt><strong><a name="item_log_2a_28mixed_message_29">log*(mixed message)</a></strong>
+
+<dd>
+<p>log*() will log the message at the corresponding LOGLEVEL and return the
+logged message, if it was logged.</p>
+</dd>
+</li>
+<dt><strong><a name="item__logtoconsole">_logToConsole(string message)</a></strong>
+
+<dd>
+<p><a href="#item__logtoconsole"><code>_logToConsole()</code></a> will send message to the console (STDERR). Always returns 1.</p>
+</dd>
+</li>
+<dt><strong><a name="item__logtosyslog">_logToSyslog(string message, int atlevel)</a></strong>
+
+<dd>
+<p><a href="#item__logtosyslog"><code>_logToSyslog()</code></a> will send message to the system syslog facility at the specified
+level. Always returns 1.</p>
+</dd>
+</li>
+<dt><strong><a name="item_getconfigvalue">getConfigValue(string key)</a></strong>
+
+<dd>
+<p><a href="#item_getconfigvalue"><code>getConfigValue()</code></a> returns a string for the given configuration key. It fails on
+error. Note that this function uses the global config container, which means
+that configuration needs to be initialized before using this method.</p>
+</dd>
+</li>
+<dt><strong><a name="item_setconfigvalue">setConfigValue(string key, value)</a></strong>
+
+<dd>
+<p><a href="#item_setconfigvalue"><code>setConfigValue()</code></a> sets the value for the given configuration key. It fails on
+error.</p>
+</dd>
+</li>
+<dt><strong><a name="item_ldb_databases"><code>ldb_databases()</code></a></strong>
+
+<dd>
+<p><a href="#item_ldb_databases"><code>ldb_databases()</code></a> will return a list of databases on the mysql
+server. It fails on error.</p>
+</dd>
+</li>
+<dt><strong><a name="item_ldb_database_tables"><code>ldb_database_tables()</code></a></strong>
+
+<dd>
+<p><a href="#item_ldb_database_tables"><code>ldb_database_tables()</code></a> will return a list of tables in the given database on the
+mysql server. It fails on error.</p>
+</dd>
+</li>
+<dt><strong><code>ldb_databases()</code></strong>
+
+<dd>
+<p><a href="#item_ldb_databases"><code>ldb_databases()</code></a> will return a list of databases on the mysql
+server. It fails on error.</p>
+</dd>
+</li>
+<dt><strong><a name="item__system">_system(arrayref params, string out)</a></strong>
+
+<dd>
+<p>_system is a wrapper for the perl <code>system()</code> function. It handles exit codes
+gracefully and can redirect STDOUT and STDERR of the executed program to the
+file specified by out. It returns true on success and false on error. It never fails.
+By default, STDOUT and STDERR are redirected to the null device, to disable
+output redirection, specify the empty string as output target. <a href="#item__system"><code>_system()</code></a> never
+forks a shell (/bin/sh).</p>
+</dd>
+</li>
+<dt><strong><a name="item__hostname">_hostname</a></strong>
+
+<dd>
+<p><a href="#item__hostname"><code>_hostname()</code></a> is a safe wrapper for Sys::Hostname::hostname(). It returns the
+hostname on success and the empty string on failure.</p>
+</dd>
+</li>
+<dt><strong><a name="item_tmpdir"><code>tmpDir()</code></a></strong>
+
+<dd>
+<p><a href="#item_tmpdir"><code>tmpDir()</code></a> will return the system-wide temporary directory name. See
+File::Spec-&gt;<code>tmpdir()</code> for details.</p>
+</dd>
+</li>
+<dt><strong><a name="item_mkstempt"><code>mkstempt()</code></a></strong>
+
+<dd>
+<p><a href="#item_mkstempt"><code>mkstempt()</code></a> will return a temporary file name. The file will have been created by
+the time the method returns. This prevents any possibility of opening up an
+identical file.</p>
+</dd>
+</li>
+<dt><strong><a name="item_workdir"><code>workDir()</code></a></strong>
+
+<dd>
+<p><a href="#item_workdir"><code>workDir()</code></a> will create a temporary directory and return the full path. If the
+directory already exists, it will choose a different path. If the directory was
+created from within the same process, it simply returns it. It fails on error.</p>
+</dd>
+</li>
+<dt><strong><a name="item_hostdir"><code>hostDir()</code></a></strong>
+
+<dd>
+<p><a href="#item_hostdir"><code>hostDir()</code></a> will create a directory inside workDir(). The name of the subdirectory
+if based on the 'dbhost' config value, or the local hostname if omitted.
+It returns the full path. If the directory was created from
+within the same process, it simply returns it. It fails on error.</p>
+</dd>
+</li>
+<dt><strong><a name="item_getpath">getPath</a></strong>
+
+<dd>
+<p><a href="#item_getpath"><code>getPath()</code></a> will take the environment variable called PATH and parse it into an
+ARRAY of which it will return a reference. In case the environment variable
+cannot be parsed to a valid paths, it returns []. Every
+directory contained will be checked for existence. If no directory can be found,
+it will return undef.</p>
+</dd>
+</li>
+<dt><strong><a name="item_findinpath">findInPath(what, [where])</a></strong>
+
+<dd>
+<p>findInPath will try to find the file specified by what in the list of paths
+specified by where. It checks if the file is existing, readable and executable.
+If found, it returns the full name of the file, otherwise it returns undef.</p>
+</dd>
+</li>
+<dt><strong><a name="item_fetchfile">fetchFile(string filename)</a></strong>
+
+<dd>
+<p><a href="#item_fetchfile"><code>fetchFile()</code></a> will read the contents of file filename into a scalar and return it.
+It fails on error.</p>
+</dd>
+</li>
+<dt><strong><a name="item_expand_tilde">expand_tilde( string filename )</a></strong>
+
+<dd>
+<p><a href="#item_expand_tilde"><code>expand_tilde()</code></a> will expand any correctly used tilde in a path to the home directory of the current user
+E.g.:</p>
+</dd>
+<dd>
+<pre>
+   ~user
+   ~user/blah
+   ~
+   ~/blah</pre>
+</dd>
+</li>
+<dt><strong><a name="item_getpreferences">getPreferences( config file )</a></strong>
+
+<dd>
+<p><a href="#item_getpreferences"><code>getPreferences()</code></a> will read preferences from the system wide and private
+configuration files. It returns a hash reference or fails on error. Optionally,
+a config file to be read can be specified as a parameter. If an optional config
+file is specified, only the system-wide config file is read and then the
+specified one, while omitting the config file in the user's HOME.</p>
+</dd>
+</li>
+<dt><strong><a name="item_fufile">fuFile (string filename, \string buffer)</a></strong>
+
+<dd>
+<p><a href="#item_fufile"><code>fuFile()</code></a> will fetch the content from the file specified by filename, unlink
+it and put the data into the buffer specified. It will return true on
+success, false if it could not get the data, and fails if it can't unlink
+the file.</p>
+</dd>
+</li>
+<dt><strong><a name="item_mydump">mydump( {db =&gt; string, all =&gt; bool, file =&gt; string} )</a></strong>
+
+<dd>
+<p><a href="#item_mydump"><code>mydump()</code></a> will dump the <code>database(s)</code> to the specified file.</p>
+</dd>
+</li>
+<dt><strong><a name="item_makenativezip">makeNativeZip( directory, workdir, zipfilename)</a></strong>
+
+<dd>
+<p><a href="#item_makenativezip"><code>makeNativeZip()</code></a> will create the zip file using native Perl routines/libraries.
+Returns undef on failure or the filename of the created archive on success.</p>
+</dd>
+</li>
+<dt><strong><a name="item_makenativetar">makeNativeTar( [files], workdir, tarfilename)</a></strong>
+
+<dd>
+<p><a href="#item_makenativetar"><code>makeNativeTar()</code></a> will create the tar file using native Perl routines/libraries.
+Returns undef on failure or the filename of the created archive on success.</p>
+</dd>
+</li>
+<dt><strong><a name="item_makeexternaltar">makeExternalTar( [files], workdir, tarfilename)</a></strong>
+
+<dd>
+<p><a href="#item_makenativetar"><code>makeNativeTar()</code></a> will create the tar file using external command line utilities.
+Returns undef on failure or the filename of the created archive on success.</p>
+</dd>
+</li>
+<dt><strong><a name="item_expandexecutablename">expandExecutableName(param, seed)</a></strong>
+
+<dd>
+<p><a href="#item_expandexecutablename"><code>expandExecutableName()</code></a> will try to expand the given name of an executable to a fully qualified, absolute filename. It takes two parameters: the first one is usually a user-supplied path or filename and the second parameter is a system default bare executable name in case no user supplied value is available.</p>
+</dd>
+<dd>
+<pre>
+   e.g.: expandExecutableName('/home/galaxy/bin/gzip', undef );
+         expandExecutableName(undef, 'gzip');</pre>
+</dd>
+<dd>
+<pre>
+         both examples make sense</pre>
+</dd>
+</li>
+<dt><strong><a name="item_maketar">makeTar(directory, [files], workdir, tarfilename)</a></strong>
+
+<dd>
+<p><a href="#item_maketar"><code>makeTar()</code></a> will create a tar file.
+TODO: more POD</p>
+</dd>
+</li>
+<dt><strong><a name="item_purgeoldfiles">purgeOldFiles(directory, number_of_files_to_keep)</a></strong>
+
+<dd>
+<p><a href="#item_purgeoldfiles"><code>purgeOldFiles()</code></a> will delete all files older than the 'number_of_files_to_keep'
+files in the specified 'directory'.</p>
+</dd>
+</li>
+<dt><strong><a name="item_version">version</a></strong>
+
+<dd>
+<p>Prints version information and exits.</p>
+</dd>
+</li>
+<dt><strong><a name="item_help">help</a></strong>
+
+<dd>
+<p>Feeds this script to `perldoc`</p>
+</dd>
+</li>
+</dl>
+
+</body>
+
+</html>
